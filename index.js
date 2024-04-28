@@ -4,7 +4,10 @@ const readline = require('readline').createInterface({
     input: process.stdin,
     output: process.stdout
 });
-
+async function openUrl(url) {
+    const open = (await import('open')).default;
+    open(url);
+}
 const mailjs = new Mailjs();
 
 const accountFilePath = './account.json';
@@ -36,9 +39,14 @@ async function login() {
         await mailjs.login(accountData.username, accountData.password)
 
         const message = await mailjs.getMessages()
+        const linkMatch = message.data[0]?.intro.match(/https:\/\/\S+/);
+        if (linkMatch) {
+            console.log(`Opening link in browser: ${linkMatch[0]}`);
+            await openUrl(linkMatch[0]); // Mở link bằng trình duyệt mặc định
+        }
 
-        console.log(message);
-
+        console.log(message.data[0]?.intro);
+        return message.data[0]?.intro
     } catch (error) {
         console.error('Error reading account data:', error);
         console.error('Please create an account or ensure the account file exists.');
